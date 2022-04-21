@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9/hmac-sha256.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9/enc-base64.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="lounge.css">
+</head>
+<body>
+
+    <div id="output"></div>
+    <br>
+        <strong>1 место  :  </strong>
+        <span id='id102'></span>
+    <br>
+    <br>
+        <strong>2 место  :  </strong>
+        <span id='id101'></span>
+    <br>
+    <br>
+        <strong>3 место  :  </strong>
+        <span id='id100'></span>
+    <br>
+    <br>
+        <strong>3 место  :  </strong>
+        <span id='id103'></span>
+    <br>
+    <br>
+        <strong>2 место  :  </strong>
+        <span id='id104'></span>
+    <br>
+    <br>
+        <strong>1 место  :  </strong>
+        <span id='id105'></span>
+    <br>
+
+    <script type="text/javascript">
+            const    apiKey = "G1MOh5vv2rGppBbQKJ4XBahCPbCWPR8bpr5GiKXNRz4ChtglOfrKRLqpziXb7Tpd";
+            const secretKey = "";
+            var stream = "";
+
+Binance = function () {
+    this.apiKey = "G1MOh5vv2rGppBbQKJ4XBahCPbCWPR8bpr5GiKXNRz4ChtglOfrKRLqpziXb7Tpd";
+    this.secretKey = "";
+    lk : "lk";
+    del : false;
+    }
+
+bot = new Binance("qwerty");
+bot.del = false;
+var b = [0, 0, 0, 0, 0, 0];
+var p = ["", "", "", "", "", ""];
+var bav = [0, 0, 0, 0, 0, 0];
+
+function fPrint (pair, delta, volume) {
+    sort = false;
+    equivalence = true;
+    for (let i = 0; i < 6; i++) {
+        if (pair == p[i]) {b[i] = delta;
+                           bav[i] = volume;
+                           equivalence = false;
+                           sort = true}}
+    if ((b[0] < delta) & equivalence) {
+        b[0] = delta;
+        p[0] = pair;
+        bav[0] = volume;
+        sort = true;
+        }
+    if ((b[3] > delta) & equivalence) {
+        b[3] = delta;
+        p[3] = pair;
+        bav[3] = volume;
+        sort = true;
+        }
+
+    if (sort == true) {
+        for (let i = 0; i < 2; i++) {
+            ii = i + 1;
+            if (b[ii] < b[i]) {
+                bb = b[i]; b[i] = b[ii]; b[ii] = bb;
+                pp = p[i]; p[i] = p[ii]; p[ii] = pp;
+                vv = bav[i]; bav[i] = bav[ii]; bav[ii] = vv;
+                }
+            }
+        for (let i = 3; i < 5; i++) {
+            ii = i + 1; 
+            if (b[ii] > b[i]) {
+                bb = b[i]; b[i] = b[ii]; b[ii] = bb;
+                pp = p[i]; p[i] = p[ii]; p[ii] = pp;
+                vv = bav[i]; bav[i] = bav[ii]; bav[ii] = vv;
+                }
+            }
+        }
+    
+    for (let i = 0; i < 6; i++) {
+        tab = "_";
+        //for (let i = 0; i < 13-p[i].length; i++) {tab = tab + "_"}
+        document.getElementById("id10"+i).innerHTML = b[i] + "_" + p[i] + "_" + bav[i]
+    }
+}
+
+function fKline(obj){
+    pair = obj["s"];
+    o = Number(obj["k"]["o"]);
+    c = Number(obj["k"]["c"]);
+    v = Number(obj["k"]["v"]);
+    //v = obj["k"]["v"];   
+    delta = (c - o) / ((c + o) / 200);
+    //console.log(pair, '\t', delta, '\t', v);
+    fPrint (pair, delta, v);      
+    }
+
+function fWebsocket(stream) {
+    //console.log(154, stream);
+    //function SoClose() { socket.close("1000"); }
+    //setTimeout(SoClose, 70000);
+    let socket = new WebSocket(stream);
+    socket.onerror = function(error) {        console.log(`[error] ${error.message}`);    }
+    socket.onopen = function(e) { socket.send(stream); };
+    socket.onmessage = function(event) {
+        let message = JSON.parse(event.data);
+        //document.getElementById("hashText").innerHTML = message;
+        //console.log(70, message["data"]["e"]);
+        switch (message["data"]["e"]) {
+            case "kline":
+                fKline(message["data"]);
+                break;
+            case "ORDER_TRADE_UPDATE":
+                document.getElementById("hashText").innerHTML = message;
+                break;
+            default:
+                document.getElementById("hashText").innerHTML = message;
+            }
+        }
+    socket.onclose = function(event) {
+        if (event.wasClean) {
+            console.log(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+        } else {    // например, сервер убил процесс или сеть недоступна  // обычно в этом случае event.code 1006
+            console.log('[close] Соединение прервано');        }    };
+    }
+
+function fListenKey() {
+    var request = new XMLHttpRequest();                                         // 1. Создаём новый объект XMLHttpRequest
+    request.open("POST", "https://fapi.binance.com/fapi/v1/listenKey");         // 2. Конфигурируем его: GET-запрос на URL 'phones.json'
+    request.setRequestHeader("X-MBX-APIKey", apiKey);
+    request.onreadystatechange = function()         { // (3)
+        if (request.readyState != 4) return;
+        if (request.status != 200) {   alert (request.status + ': ' + request.statusText);   } 
+        else {  
+            lk = JSON.parse(request.responseText);
+            Binance.lk = lk["listenKey"];
+            //console.log(88, Binance.lk);       //request.responseText       // вывести результат
+            KeepaliveUserDataStream();
+            stream = "wss://fstream.binance.com/stream?streams="+Binance.stream+Binance.lk;
+            fWebsocket(stream);
+            //var kwa = {symbol:"BTSUSDT", side:"BUY", price:0.095, quantity:100};
+            //NewOrder(kwa);
+            }
+        }
+    request.send(); }                                                           // 3. Отсылаем запрос   // xhr.send([body])  В body находится тело запроса.
+
+function KeepaliveUserDataStream() {        //   использует рекурсивный setTimeout:
+    let i = 0;
+    let timerId = setTimeout( function flk() {
+        i++;
+        timerId = setTimeout(flk, 1800000);
+            },
+        0)
+    }
+
+fListenKey();
+
+
+
+var request_time = new XMLHttpRequest();
+request_time.open("GET", "https://fapi.binance.com/fapi/v1/time");
+request_time.onreadystatechange = function () {
+    console.log (request_time.readyState);
+    if (request_time.readyState != 4) return;
+    if (request_time.status != 200) {   alert (request_time.status + ': ' + request_time.statusText);   } 
+    else {
+        var serverTime = JSON.parse(request_time.responseText);
+        Binance.shiftSeconds = serverTime.serverTime - Date.now();
+        console.log (271, request_time.responseText, serverTime, Binance.shiftSeconds, "=", serverTime.serverTime, "-", Date.now())
+        }
+    }
+request_time.send();
+
+
+var request = new XMLHttpRequest();
+request.open("GET", "https://fapi.binance.com/fapi/v1/exchangeInfo");
+request.onreadystatechange = function () {
+    if (request.readyState != 4) return;
+    if (request.status != 200) {   alert (request.status + ': ' + request.statusText);   } 
+    else {
+        var numbers = JSON.parse(request.responseText);
+        for (let i = 0; i < numbers.symbols.length; i++) {
+            let a = numbers.symbols[i].pair.toLowerCase();
+            stream = stream + a + "@kline_5m/";
+            }
+        Binance.stream = stream;
+            //Binance.stream = "btsusdt@kline_5m/";
+        }
+    }
+request.send();
+
+
+        </script>
+
+    <h1></h1>
+</body>
+</html>
